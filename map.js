@@ -26,8 +26,9 @@ const LABEL_FONT = USE_MAPBOX ? ['DIN Pro Medium', 'Arial Unicode MS Regular'] :
 
 // Ebenen: eine GeoJSON-Datei je Gruppe
 const GRUPPEN = [
-  { id: 'sav', name: 'SAV – eigene Gewässer', datei: 'daten/sav-eigene-seen.geojson', farbe: '#1565c0', gestrichelt: false },
-  { id: 'w4', name: 'Pachtgemeinschaft Weser IV (vorläufig)', datei: 'daten/weser4-vorlaeufig.geojson', farbe: '#00897b', gestrichelt: true },
+  // Kräftige Nicht-Blau-Töne, damit sich die Gewässer vom blauen Wasser der Grundkarte abheben
+  { id: 'sav', name: 'SAV – eigene Gewässer', datei: 'daten/sav-eigene-seen.geojson', farbe: '#ff6d00', gestrichelt: false },
+  { id: 'w4', name: 'Pachtgemeinschaft Weser IV (vorläufig)', datei: 'daten/weser4-vorlaeufig.geojson', farbe: '#e6007e', gestrichelt: true },
 ];
 
 const sichtbar = Object.fromEntries(GRUPPEN.map(g => [g.id, true]));
@@ -47,7 +48,10 @@ function loadEngine() {
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function popupHtml(p) {
+// Route in Google Maps (öffnet auf dem Handy die App)
+const gmapsUrl = ll => `https://www.google.com/maps/dir/?api=1&destination=${ll.lat.toFixed(6)},${ll.lng.toFixed(6)}`;
+
+function popupHtml(p, ll) {
   return `<div class="popup">
     <h3>${esc(p.name)}</h3>
     <div class="gruppe">${esc(p.gruppe)}</div>
@@ -55,7 +59,16 @@ function popupHtml(p) {
     ${p.hinweis ? `<p><b>Hinweis:</b> ${esc(p.hinweis)}</p>` : ''}
     ${p.status ? `<p class="status">${esc(p.status)}</p>` : ''}
     ${p.seite ? `<p><a href="${esc(p.seite)}" target="_blank" rel="noopener">Seite beim SAV</a></p>` : ''}
+    <a class="gmaps" href="${gmapsUrl(ll)}" target="_blank" rel="noopener">Route in Google Maps</a>
   </div>`;
+}
+
+// Immer nur eine Infokarte offen: eine neue schließt die vorherige
+let offenesPopup = null;
+function zeigePopup(lngLat, props) {
+  if (offenesPopup) offenesPopup.remove();
+  const ll = gl.LngLat.convert(lngLat);
+  offenesPopup = new gl.Popup({ maxWidth: '300px' }).setLngLat(ll).setHTML(popupHtml(props, ll)).addTo(map);
 }
 
 function addLayers() {
@@ -64,9 +77,9 @@ function addLayers() {
     map.addSource(g.id, { type: 'geojson', data: daten[g.id] });
     const vis = sichtbar[g.id] ? 'visible' : 'none';
     map.addLayer({ id: `${g.id}-fill`, type: 'fill', source: g.id, layout: { visibility: vis },
-      paint: { 'fill-color': g.farbe, 'fill-opacity': 0.35 } });
+      paint: { 'fill-color': g.farbe, 'fill-opacity': 0.55 } });
     map.addLayer({ id: `${g.id}-line`, type: 'line', source: g.id, layout: { visibility: vis },
-      paint: { 'line-color': g.farbe, 'line-width': 2, ...(g.gestrichelt ? { 'line-dasharray': [2, 1.5] } : {}) } });
+      paint: { 'line-color': g.farbe, 'line-width': 3,...(g.gestrichelt ? { 'line-dasharray': [2, 1.5] } : {}) } });
     map.addLayer({ id: `${g.id}-label`, type: 'symbol', source: g.id, minzoom: 11,
       layout: { visibility: vis, 'text-field': ['get', 'name'], 'text-font': LABEL_FONT, 'text-size': 12 },
       paint: { 'text-color': '#0d2233', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
@@ -101,8 +114,7 @@ function buildPanel() {
       li.addEventListener('click', () => {
         const bb = bbox([f]);
         map.fitBounds(bb, { padding: 80, maxZoom: 15 });
-        new gl.Popup().setLngLat([(bb[0][0] + bb[1][0]) / 2, (bb[0][1] + bb[1][1]) / 2])
-          .setHTML(popupHtml(f.properties)).addTo(map);
+        zeigePopup([(bb[0][0] + bb[1][0]) / 2, (bb[0][1] + bb[1][1]) / 2], f.properties);
       });
       liste.appendChild(li);
     }
@@ -135,7 +147,7 @@ async function init() {
   map.on('style.load', addLayers);
 
   for (const g of GRUPPEN) {
-    map.on('click', `${g.id}-fill`, e => new gl.Popup().setLngLat(e.lngLat).setHTML(popupHtml(e.features[0].properties)).addTo(map));
+    map.on('click', `${g.id}-fill`, e => zeigePopup(e.lngLat, e.features[0].properties));
     map.on('mouseenter', `${g.id}-fill`, () => (map.getCanvas().style.cursor = 'pointer'));
     map.on('mouseleave', `${g.id}-fill`, () => (map.getCanvas().style.cursor = ''));
   }

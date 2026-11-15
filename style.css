@@ -25,6 +25,21 @@ h1 span { font-weight: 400; color: #5a6b78; }
 .popup .gruppe { color: #5a6b78; font-size: 12px; margin-bottom: 6px; }
 .popup p { margin: 4px 0; }
 .popup .status { color: #a15c00; font-size: 12px; }
+.popup { padding-right: 28px; } /* Platz für das große Schließen-Kreuz */
+.popup .gmaps {
+  display: block; margin-top: 8px; padding: 8px 10px; text-align: center;
+  background: #1a73e8; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600;
+}
+.popup .gmaps:hover { background: #1558b0; }
+
+/* Großes, gut treffbares Schließen-Kreuz (MapLibre und Mapbox) */
+.maplibregl-popup-close-button,
+.mapboxgl-popup-close-button {
+  width: 36px; height: 36px; font-size: 28px; line-height: 32px;
+  color: #1d2b36; border-radius: 0 6px 0 8px;
+}
+.maplibregl-popup-close-button:hover,
+.mapboxgl-popup-close-button:hover { background: #eef1f4; }
 
 @media (max-width: 700px) {
   body { flex-direction: column-reverse; }
