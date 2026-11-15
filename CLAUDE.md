@@ -10,6 +10,8 @@ Kontext: Idee eines Kollegen (Sebastian), Dima hilft technisch.
 - Umrisse aus OSM: 4 eigene Seen komplett, 8 Weser-IV-Gewässer vorläufig, siehe notizen/osm-abgleich.md
 - Entscheidung (15.11.2026): MapLibre + OpenFreeMap statt Mapbox (Lizenz, kein persönliches Konto/Token, keine Limits). Begründung in Notion: "Angeln Mapbox" -> "Почему MapLibre, а не Mapbox". Code läuft weiter mit beiden; Mapbox nur mit Token in config.js.
 - Daten als GeoJSON im Projekt (keine Mapbox-Tilesets)
+- Live: https://angeln.lirichkon.de (VPS, Caddy file_server, Cloudflare-Proxy). Update: push, dann auf VPS `git -C /var/www/sav-karte pull`.
+- Cloudflare cacht .js/.css bis 4 h -> bei jeder Änderung an map.js/style.css `?v=` in index.html hochzählen.
 
 ## Offene Fragen
 - Wer pflegt die Karte später? Für den Verein oder privat?

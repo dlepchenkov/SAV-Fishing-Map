@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gewässerkarte SAV Hemelingen</title>
-  <link rel="stylesheet" href="style.css">
+  <!-- ?v= bei jeder Änderung an style.css/map.js hochzählen: Cloudflare cacht .css/.js bis zu 4 h -->
+  <link rel="stylesheet" href="style.css?v=2">
   <!-- Mapbox-Token (nicht im Repo): config.js, Vorlage config.example.js -->
   <script src="config.js" onerror="window.MAPBOX_TOKEN=''"></script>
 </head>
@@ -25,6 +26,6 @@
     <p id="engine" class="hinweis-klein"></p>
   </aside>
   <div id="map"></div>
-  <script src="map.js"></script>
+  <script src="map.js?v=2"></script>
 </body>
 </html>
