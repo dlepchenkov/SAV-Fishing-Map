@@ -1,0 +1,6 @@
+[
+  {"name": "Mahndorfer See", "lat": 53.03, "lon": 8.94489, "fische": ["Karpfen", "Schleie", "Hecht", "Barsch"], "seite": "https://www.sav-hemelingen.de/index.php/gewaesser/mahndorfer-see/", "hinweis": "Vogelschutzinsel"},
+  {"name": "Osterholzer See (Radio-Bremen-See)", "lat": 53.0562, "lon": 8.96786, "fische": ["Karpfen", "Schleie", "Zander"], "seite": "https://www.sav-hemelingen.de/index.php/gewaesser/osterholzer-see/"},
+  {"name": "Panrepelsee", "lat": 53.05089, "lon": 8.97108, "fische": ["Karpfen", "Schleie"], "seite": "https://www.sav-hemelingen.de/index.php/gewaesser/panrepelsee/", "hinweis": "Zugang sehr schwierig, Stege 2015 erneuert"},
+  {"name": "Rodensee und Rodenfleet (früher Osterloh Seen)", "lat": 53.04627, "lon": 8.91784, "fische": [], "seite": "https://www.sav-hemelingen.de/index.php/gewaesser/rodensee-rodenfleet-osterloh-see/", "hinweis": "gut für Köderfische, Fische nicht unbedingt zum Verzehr, Verschlammung nach Regen"}
+]
