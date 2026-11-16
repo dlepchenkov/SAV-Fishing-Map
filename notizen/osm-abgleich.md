@@ -26,3 +26,10 @@ Mehrdeutig: Steinkuhle (way/92966575 bei Achim-Uesen ODER way/74130409 bei Verde
 
 Nicht gefunden unter dem Namen: Blauer Werder, Korbhauskuhle, Ueser Hafen, Sandabbau Karpe, Wiedbüschenkuhle
 -> evtl. ohne Namen in OSM oder andere Schreibweise; sonst selbst zeichnen (Luftbild, ggf. direkt in OSM eintragen).
+
+## Test Kanal: Arberger Kanal (16.11.2026) -> daten/test-kanaele.geojson
+- In OSM als Linien vorhanden: 26 Wege "Arberger Kanal" (waterway=canal/drain), zusammen ca. 7,3 km; Fließgewässer-Relation relation/3091224.
+- Offiziell: WRRL-Wasserkörper 12002 "Arberger Kanal, Sielgraben, Brede-Ehrs Graben", 9,8 km (davon 5,7 km in Bremen).
+  Die beiden anderen Teile gibt es in OSM ebenfalls als eigene Linien ("Arberger Sielgraben", "Brede-Ehrs Graben") – noch nicht übernommen.
+- Karte kann jetzt Linien: dickere Linie, unsichtbare 18-px-Trefferlinie zum Anklicken, Beschriftung entlang der Linie.
+- Aufwand für den Test: wenige Minuten (Overpass-Abfrage -> GeoJSON). Offene Frage bleibt die Angelerlaubnis für den Kanal.

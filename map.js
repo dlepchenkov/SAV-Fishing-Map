@@ -29,7 +29,13 @@ const GRUPPEN = [
   // Kräftige Nicht-Blau-Töne, damit sich die Gewässer vom blauen Wasser der Grundkarte abheben
   { id: 'sav', name: 'SAV – eigene Gewässer', datei: 'daten/sav-eigene-seen.geojson', farbe: '#ff6d00', gestrichelt: false },
   { id: 'w4', name: 'Pachtgemeinschaft Weser IV (vorläufig)', datei: 'daten/weser4-vorlaeufig.geojson', farbe: '#e6007e', gestrichelt: true },
+  { id: 'kan', name: 'Kanäle (Test)', datei: 'daten/test-kanaele.geojson', farbe: '#8e24aa', gestrichelt: false },
 ];
+
+// Ebenen je Gruppe (für Sichtbarkeit). Flächen = Seen, Linien = Kanäle/Gräben.
+const EBENEN = ['fill', 'line', 'hit', 'label', 'linelabel'];
+const IST_FLAECHE = ['match', ['geometry-type'], ['Polygon', 'MultiPolygon'], true, false];
+const IST_LINIE = ['match', ['geometry-type'], ['LineString', 'MultiLineString'], true, false];
 
 const sichtbar = Object.fromEntries(GRUPPEN.map(g => [g.id, true]));
 const daten = {};
@@ -76,13 +82,19 @@ function addLayers() {
     if (map.getSource(g.id)) continue;
     map.addSource(g.id, { type: 'geojson', data: daten[g.id] });
     const vis = sichtbar[g.id] ? 'visible' : 'none';
-    map.addLayer({ id: `${g.id}-fill`, type: 'fill', source: g.id, layout: { visibility: vis },
+    const text = { 'text-color': '#0d2233', 'text-halo-color': '#fff', 'text-halo-width': 1.5 };
+    map.addLayer({ id: `${g.id}-fill`, type: 'fill', source: g.id, filter: IST_FLAECHE, layout: { visibility: vis },
       paint: { 'fill-color': g.farbe, 'fill-opacity': 0.55 } });
-    map.addLayer({ id: `${g.id}-line`, type: 'line', source: g.id, layout: { visibility: vis },
-      paint: { 'line-color': g.farbe, 'line-width': 3,...(g.gestrichelt ? { 'line-dasharray': [2, 1.5] } : {}) } });
-    map.addLayer({ id: `${g.id}-label`, type: 'symbol', source: g.id, minzoom: 11,
-      layout: { visibility: vis, 'text-field': ['get', 'name'], 'text-font': LABEL_FONT, 'text-size': 12 },
-      paint: { 'text-color': '#0d2233', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
+    // Umriss der Seen bzw. die Linie selbst (Kanäle etwas dicker)
+    map.addLayer({ id: `${g.id}-line`, type: 'line', source: g.id, layout: { visibility: vis, 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': g.farbe, 'line-width': ['case', IST_LINIE, 5, 3], ...(g.gestrichelt ? { 'line-dasharray': [2, 1.5] } : {}) } });
+    // Unsichtbare breite Linie, damit man schmale Kanäle gut anklicken/antippen kann
+    map.addLayer({ id: `${g.id}-hit`, type: 'line', source: g.id, filter: IST_LINIE, layout: { visibility: vis },
+      paint: { 'line-color': '#000', 'line-opacity': 0.01, 'line-width': 18 } });
+    map.addLayer({ id: `${g.id}-label`, type: 'symbol', source: g.id, filter: IST_FLAECHE, minzoom: 11,
+      layout: { visibility: vis, 'text-field': ['get', 'name'], 'text-font': LABEL_FONT, 'text-size': 12 }, paint: text });
+    map.addLayer({ id: `${g.id}-linelabel`, type: 'symbol', source: g.id, filter: IST_LINIE, minzoom: 12,
+      layout: { visibility: vis, 'symbol-placement': 'line', 'text-field': ['get', 'name'], 'text-font': LABEL_FONT, 'text-size': 12 }, paint: text });
   }
 }
 
@@ -95,6 +107,19 @@ function bbox(features) {
   return [[b[0], b[1]], [b[2], b[3]]];
 }
 
+// Punkt für Infokarte/Route: bei Linien die Mitte des längsten Abschnitts (liegt sicher am Wasser),
+// bei Flächen die Mitte des Umrisses
+function ankerPunkt(f) {
+  const g = f.geometry;
+  if (g.type === 'LineString' || g.type === 'MultiLineString') {
+    const teile = g.type === 'LineString' ? [g.coordinates] : g.coordinates;
+    const laengster = teile.reduce((a, b) => (b.length > a.length ? b : a));
+    return laengster[Math.floor(laengster.length / 2)];
+  }
+  const bb = bbox([f]);
+  return [(bb[0][0] + bb[1][0]) / 2, (bb[0][1] + bb[1][1]) / 2];
+}
+
 function buildPanel() {
   const gruppenEl = document.getElementById('gruppen');
   const liste = document.getElementById('liste');
@@ -103,7 +128,7 @@ function buildPanel() {
     lbl.innerHTML = `<input type="checkbox" checked> <span class="swatch" style="background:${g.farbe}55;border-color:${g.farbe}"></span> ${esc(g.name)}`;
     lbl.querySelector('input').addEventListener('change', e => {
       sichtbar[g.id] = e.target.checked;
-      for (const suf of ['fill', 'line', 'label'])
+      for (const suf of EBENEN)
         map.setLayoutProperty(`${g.id}-${suf}`, 'visibility', e.target.checked ? 'visible' : 'none');
     });
     gruppenEl.appendChild(lbl);
@@ -112,9 +137,8 @@ function buildPanel() {
       const li = document.createElement('li');
       li.innerHTML = `${esc(f.properties.name)}<small>${esc(f.properties.hinweis || f.properties.fische || '')}</small>`;
       li.addEventListener('click', () => {
-        const bb = bbox([f]);
-        map.fitBounds(bb, { padding: 80, maxZoom: 15 });
-        zeigePopup([(bb[0][0] + bb[1][0]) / 2, (bb[0][1] + bb[1][1]) / 2], f.properties);
+        map.fitBounds(bbox([f]), { padding: 80, maxZoom: 15 });
+        zeigePopup(ankerPunkt(f), f.properties);
       });
       liste.appendChild(li);
     }
@@ -146,10 +170,11 @@ async function init() {
   map.addControl(new gl.ScaleControl(), 'bottom-right');
   map.on('style.load', addLayers);
 
-  for (const g of GRUPPEN) {
-    map.on('click', `${g.id}-fill`, e => zeigePopup(e.lngLat, e.features[0].properties));
-    map.on('mouseenter', `${g.id}-fill`, () => (map.getCanvas().style.cursor = 'pointer'));
-    map.on('mouseleave', `${g.id}-fill`, () => (map.getCanvas().style.cursor = ''));
+  // Klickbar: Flächen (Seen) und die breite unsichtbare Trefferlinie (Kanäle)
+  for (const g of GRUPPEN) for (const ebene of [`${g.id}-fill`, `${g.id}-hit`]) {
+    map.on('click', ebene, e => zeigePopup(e.lngLat, e.features[0].properties));
+    map.on('mouseenter', ebene, () => (map.getCanvas().style.cursor = 'pointer'));
+    map.on('mouseleave', ebene, () => (map.getCanvas().style.cursor = ''));
   }
   buildPanel();
 }

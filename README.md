@@ -19,5 +19,6 @@ Ohne Token läuft dieselbe Karte mit MapLibre + OpenFreeMap (Karte) und Esri (Lu
 ## Daten
 - `daten/sav-eigene-seen.geojson` – 4 eigene Seen, Umrisse aus OSM
 - `daten/weser4-vorlaeufig.geojson` – erste 8 Weser-IV-Gewässer, Zuordnung noch prüfen
+- `daten/test-kanaele.geojson` – Test: Arberger Kanal als Linie aus OSM
 - Abgleich und offene Punkte: `notizen/osm-abgleich.md`
 - Bearbeiten: geojson.io oder QGIS
